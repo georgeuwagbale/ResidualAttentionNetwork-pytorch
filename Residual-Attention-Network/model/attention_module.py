@@ -5,7 +5,7 @@ import functools
 from torch.autograd import Variable
 import numpy as np
 
-from .basic_layers import ResidualBlock
+from basic_layers import ResidualBlock
 
 
 class AttentionModule_pre(nn.Module):
@@ -160,17 +160,21 @@ class AttentionModule_stage0(nn.Module):
         out_mpool4 = self.mpool4(out_softmax3)
         # 7*7
         out_softmax4 = self.softmax4_blocks(out_mpool4)
+        self.interpolation4 = nn.UpsamplingBilinear2d(size=out_softmax3.size()[2:])
         out_interp4 = self.interpolation4(out_softmax4) + out_softmax3
         out = out_interp4 + out_skip3_connection
         out_softmax5 = self.softmax5_blocks(out)
+        self.interpolation3 = nn.UpsamplingBilinear2d(size=out_softmax2.size()[2:])
         out_interp3 = self.interpolation3(out_softmax5) + out_softmax2
         # print(out_skip2_connection.data)
         # print(out_interp3.data)
         out = out_interp3 + out_skip2_connection
         out_softmax6 = self.softmax6_blocks(out)
+        self.interpolation2 = nn.UpsamplingBilinear2d(size=out_softmax1.size()[2:])
         out_interp2 = self.interpolation2(out_softmax6) + out_softmax1
         out = out_interp2 + out_skip1_connection
         out_softmax7 = self.softmax7_blocks(out)
+        self.interpolation1 = nn.UpsamplingBilinear2d(size=out_trunk.size()[2:])
         out_interp1 = self.interpolation1(out_softmax7) + out_trunk
         out_softmax8 = self.softmax8_blocks(out_interp1)
         out = (1 + out_softmax8) * out_trunk
